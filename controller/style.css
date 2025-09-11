@@ -1,0 +1,22 @@
+body {
+    height: 100vh;
+    background-color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#num {
+    font-weight: bold;
+    color: red;
+    text-align: center;
+    font-size: 50vw;
+    white-space: nowrap;
+    /*border: 2px solid white;*/
+}
+
+#btn {
+    background-color: white;
+    color: green;
+    font-size: 10vh;
+}
