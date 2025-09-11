@@ -1,5 +1,10 @@
 // import the express library
 const express = require('express');
+const path = require('path');
+
+const livereload = require("livereload");
+const connectLivereload = require("connect-livereload");
+
 const { createServer } = require('node:http');
 const { join } = require('node:path');
 const { Server } = require('socket.io');
@@ -8,12 +13,14 @@ const { avgChaos } = require('./utils/chaos');
 const app = express();
 const server = createServer(app);
 
-const io = new Server(server, {
-  cors: {
-    origin: "*", // actually put in vercel url here when deployed
-    methods: ["GET", "POST"],
-  }
-});
+const io = new Server(server);
+
+const livereloadServer = livereload.createServer();
+livereloadServer.watch(path.join(__dirname, "../controller"));
+
+app.use(express.static(path.join(__dirname, "../controller")));
+
+app.use(connectLivereload());
 
 app.get('/', (req, res) => {
   res.send('<p>it is working</p>');
@@ -39,7 +46,7 @@ io.on('connection', (socket) => {
       axisChaos.x.set(socket.id, chaos.x);
       axisChaos.y.set(socket.id, chaos.y);
       axisChaos.z.set(socket.id, chaos.z);
-      //console.log('chaos total', axisChaos);
+      console.log('chaos total', axisChaos);
     }
     if (watcher) {
       // actually averaging on this side, not sure if that's better or worse for ahh whateva

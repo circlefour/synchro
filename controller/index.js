@@ -1,6 +1,8 @@
-const backend = "https://mobile-interaction.onrender.com";
+//const backend = "https://mobile-interaction.onrender.com";
 
-const socket = io(backend);
+//const socket = io(backend);
+
+const socket = io();
 
 const btn = document.getElementById("btn");
 
