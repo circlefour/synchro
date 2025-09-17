@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ngrok http 3000
+ngrok http 3000 > /dev/null &
 
 sleep 2
 
