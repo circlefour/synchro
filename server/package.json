@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node index.js",
+	"dev": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +17,7 @@
   },
   "devDependencies": {
     "connect-livereload": "^0.6.1",
-    "livereload": "^0.10.3"
+    "livereload": "^0.10.3",
+    "nodemon": "^3.1.10"
   }
 }
