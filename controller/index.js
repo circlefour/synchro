@@ -1,7 +1,3 @@
-//const backend = "https://mobile-interaction.onrender.com";
-
-//const socket = io(backend);
-
 const socket = io();
 
 const btn = document.getElementById("btn");
@@ -22,7 +18,7 @@ function setupDeviceMotionListener() {
 
     // prior thing
     //socket.emit('shake', level);
-    socket.emit('shake', {x: acceleration.x, y: acceleration.y, z: acceleration.z});
+    socket.emit('shake', {x: acceleration.x, y: acceleration.y, z: acceleration.z, avg: level});
   });
 }
 

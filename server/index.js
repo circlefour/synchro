@@ -8,7 +8,6 @@ const connectLivereload = require("connect-livereload");
 const { createServer } = require('node:http');
 const { join } = require('node:path');
 const { Server } = require('socket.io');
-const { avgChaos } = require('./utils/chaos');
 
 const app = express();
 const server = createServer(app);
@@ -26,48 +25,70 @@ app.get('/', (req, res) => {
   res.send('<p>it is working</p>');
 });
 
-let watcher = null;
+const clients = new Map();
 
-const axisChaos = {
-  x: new Map(),
-  y: new Map(),
-  z: new Map(),
-};
+// to calculate running avg
+let cSum = 0;
+let cCount = 0;
+
+let newData = false;
+const OUTPUT_INTERVAL_MS = 50;
 
 io.on('connection', (socket) => {
   console.log('a user connected', socket.id);
+  clients.set(socket.id, {
+    x: 0,
+    y:0,
+    z:0,
+    avg:0,
+    lastUpdate: Date.now(),
+  });
+  cCount++;
 
-  socket.on('watcher', () => {
-    console.log('watcher connected:', socket.id);
-    watcher = socket;
-  });
   socket.on('shake', (chaos) => {
-    if (socket !== watcher) {
-      axisChaos.x.set(socket.id, chaos.x);
-      axisChaos.y.set(socket.id, chaos.y);
-      axisChaos.z.set(socket.id, chaos.z);
-      console.log('chaos total', axisChaos);
-    }
-    if (watcher) {
-      // actually averaging on this side, not sure if that's better or worse for ahh whateva
-      const axisAvg = {
-        x: avg(Array.from(axisChaos.x.values())),
-        y: avg(Array.from(axisChaos.y.values())),
-        z: avg(Array.from(axisChaos.z.values())),
-      }
-      console.log(axisAvg);
-      watcher.emit('chaos', axisAvg);
+    if (clients.has(socket.id)) {
+      const client = clients.get(socket.id);
+      const oldAvg = client.avg;
+      client.x = chaos.x;
+      client.y = chaos.y;
+      client.z = chaos.z;
+      client.avg = chaos.avg;
+      client.lastUpdate = Date.now();
+
+      cSum = cSum - oldAvg + client.avg;
+
+      newData = true;
     }
   });
+
   socket.on("disconnect", () => {
     console.log("device disconnected:", socket.id);
-    ['x','y','z'].forEach(axis => axisChaos[axis].delete(socket.id));
+    if (clients.has(socket.id)) {
+      const client = clients.get(socket.id);
+      cSum -= client.avg;
+      cCount--;
+      clients.delete(socket.id);
+    }
   });
 });
 
-function avg(arr){
-  return arr.length ? arr.reduce((a,b) => a + b, 0) / arr.length : 0;
+function processNewData(){
+  if (cCount == 0){
+    console.log("no connected clients, no decision");
+    return 0;
+  }
+  const avg = cSum / cCount;
+  console.log("collective decision: ", avg);
+  return avg;
 }
+
+// global output loop
+let outputInterval = setInterval(() => {
+  if (newData) {
+    processNewData();
+    newData = false;
+  }
+}, OUTPUT_INTERVAL_MS);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
