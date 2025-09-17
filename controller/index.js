@@ -6,6 +6,9 @@ function setupDeviceMotionListener() {
   let smoothInt = 0;
   const alpha = 0.1; // smoothing factor (0-1), smaller = smoother
 
+  const vibThresh = 0.6; // 0–1 scale, triggers vibration for strong shakes
+  let vibrating = false;
+
   window.addEventListener("devicemotion", (event) => {
     //console.log('hi wussup');
 
