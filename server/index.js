@@ -5,6 +5,20 @@ const path = require('path');
 const livereload = require("livereload");
 const connectLivereload = require("connect-livereload");
 
+const Gpio = require('pigpio').Gpio;
+const speaker = new Gpio(18, {mode: Gpio.OUTPUT });
+
+function playTone(freq, duration) {
+	console.log("it's playing tone");
+	const herzConv = 1000;
+	const dutyCycle = 500000;
+	speaker.hardwarePwmWrite(freq*herzConv, dutyCycle);
+	setTimeout(() => {
+		speaker.hardwarePwmWrite(0,0); // stop tone
+		console.log('tone finished');
+	}, duration);
+}
+
 const { createServer } = require('node:http');
 const { join } = require('node:path');
 const { Server } = require('socket.io');
@@ -45,6 +59,11 @@ io.on('connection', (socket) => {
   });
   cCount++;
 
+  console.log("above play tone");
+  // just to test if it's working
+  playTone(1000, 500);
+  console.log("below play tone");
+
   socket.on('shake', (chaos) => {
     if (clients.has(socket.id)) {
       const client = clients.get(socket.id);
@@ -56,6 +75,8 @@ io.on('connection', (socket) => {
       client.lastUpdate = Date.now();
 
       cSum = cSum - oldAvg + client.avg;
+
+	  if (cSum > 40) playTone(1000, 500);
 
       newData = true;
     }
